@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Edit School – Captain I Can!{% endblock %}
+{% block page_title %}Edit School Information{% endblock %}
+
+{% block content %}
+
+<h2>Edit School: {{ school['name'] }}</h2>
+
+<form method="post">
+
+    <div class="form-group">
+        <label for="name">School Name *</label>
+        <input type="text" id="name" name="name" value="{{ form_data['name'] }}" required>
+        {% if errors.get('name') %}
+        <span class="error">{{ errors['name'] }}</span>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label for="address">Address *</label>
+        <input type="text" id="address" name="address" value="{{ form_data['address'] }}" required>
+        {% if errors.get('address') %}
+        <span class="error">{{ errors['address'] }}</span>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label for="contact_person">Contact Person *</label>
+        <input type="text" id="contact_person" name="contact_person" value="{{ form_data['contact_person'] }}" required>
+        {% if errors.get('contact_person') %}
+        <span class="error">{{ errors['contact_person'] }}</span>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label for="contact_phone">Contact Phone</label>
+        <input type="text" id="contact_phone" name="contact_phone" value="{{ form_data['contact_phone'] }}">
+        {% if errors.get('contact_phone') %}
+        <span class="error">{{ errors['contact_phone'] }}</span>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label for="contact_email">Contact Email</label>
+        <input type="email" id="contact_email" name="contact_email" value="{{ form_data['contact_email'] }}">
+        {% if errors.get('contact_email') %}
+        <span class="error">{{ errors['contact_email'] }}</span>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label for="capacity">Capacity (number of students)</label>
+        <input type="number" id="capacity" name="capacity" value="{{ form_data['capacity'] }}">
+        {% if errors.get('capacity') %}
+        <span class="error">{{ errors['capacity'] }}</span>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label for="location">Location (Parish / Area)</label>
+        <input type="text" id="location" name="location" value="{{ form_data['location'] }}">
+        {% if errors.get('location') %}
+        <span class="error">{{ errors['location'] }}</span>
+        {% endif %}
+    </div>
+
+    <div class="form-inline">
+        <div class="form-group">
+            <label for="start_time">School Start Time</label>
+            <input type="text" id="start_time" name="start_time" placeholder="e.g. 8:00 AM" value="{{ form_data['start_time'] }}">
+        </div>
+
+        <div class="form-group">
+            <label for="end_time">School End Time</label>
+            <input type="text" id="end_time" name="end_time" placeholder="e.g. 2:30 PM" value="{{ form_data['end_time'] }}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="exam_dates">Exam Dates</label>
+        <textarea id="exam_dates" name="exam_dates" rows="2">{{ form_data['exam_dates'] }}</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="holidays">Holidays / Special Notes</label>
+        <textarea id="holidays" name="holidays" rows="2">{{ form_data['holidays'] }}</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="num_teachers">Number of Teachers</label>
+        <input type="number" id="num_teachers" name="num_teachers" value="{{ form_data['num_teachers'] }}">
+        {% if errors.get('num_teachers') %}
+        <span class="error">{{ errors['num_teachers'] }}</span>
+        {% endif %}
+    </div>
+
+    <button type="submit">Save Changes</button>
+    <a href="{{ url_for('list_schools') }}" class="back-link">Back to list</a>
+</form>
+
+{% endblock %}

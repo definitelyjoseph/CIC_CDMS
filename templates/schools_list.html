@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Schools – Captain I Can!{% endblock %}
+{% block page_title %}Schools{% endblock %}
+
+{% block content %}
+
+<h2>All Schools</h2>
+
+<form method="get" action="{{ url_for('list_schools') }}" class="search-form">
+    <label for="search">Search by name:</label>
+    <input type="text" id="search" name="search" value="{{ search or '' }}" placeholder="Enter school name">
+    <button type="submit">Search</button>
+</form>
+
+{% if schools %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Contact Person</th>
+            <th>Location</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for school in schools %}
+        <tr>
+            <td>{{ school["name"] }}</td>
+            <td>{{ school["address"] }}</td>
+            <td>{{ school["contact_person"] }}</td>
+            <td>{{ school["location"] }}</td>
+            <td>
+                <a href="{{ url_for('edit_school', school_id=school['id']) }}">Edit</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No schools found.</p>
+{% endif %}
+
+{% endblock %}

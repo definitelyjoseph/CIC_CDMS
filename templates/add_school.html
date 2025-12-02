@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Add School</title>
+	<link rel="stylesheet"
+     	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body class="container mt-5">
+
+<h2>Add School Information</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, msg in messages %}
+      <div class="alert alert-{{ category }}">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="POST">
+	<br>
+	<label class="form-label">School Name (Required)</label>
+        <input type="text" class="form-control" name="name"style="width:500px;">
+
+        <label class="form-label">Address (Required)</label>
+        <input type="text" class="form-control" name="address" style="width:500px;">
+
+        <label class="form-label">Capacity</label>
+        <input type="number" class="form-control" name="capacity" style="width:500px;">
+
+        <label class="form-label">Contact Person (Required) </label>
+        <input type="text" class="form-control" name="contact_person" style="width:500px;">
+
+        <label class="form-label">Start Time</label>
+        <input type="time" class="form-control" name="start_time" style="width:500px;">
+
+        <label class="form-label">End Time</label>
+        <input type="time" class="form-control" name="end_time" style="width:500px;">
+    
+        <label class="form-label">Exam Dates</label>
+        <textarea class="form-control" name="exam_dates" style="width:500px;"></textarea>
+    
+        <label class="form-label">Holidays</label>
+        <textarea class="form-control" name="holidays" style="width:500px;"></textarea>
+
+        <label class="form-label">Number of Teachers</label>
+        <input type="number" class="form-control" name="num_teachers" style="width:500px;">
+	</br>
+	
+
+    <button type="submit" class="btn btn-primary">Save School</button>
+
+</form>
+
+</body>
+
+</html>

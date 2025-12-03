@@ -230,6 +230,75 @@ def edit_school(school_id):
         errors={},
     )
 
+# ---------------------------
+# Add new school information
+# ---------------------------
+#this route creates a webpage at /schools/add
+@app.route("/schools/add", methods=["GET", "POST"]) 
+def add_school():
+    if request.method == "POST":
+        '''below calls the existing valid_school_form function that will check
+        alll the fields making sure the input is valid
+        '''
+        (
+            is_valid,
+            errors,
+            name,
+            address,
+            contact_person,
+            contact_phone,
+            contact_email,
+            capacity,
+            start_time,
+            end_time,
+            exam_dates,
+            holidays,
+            num_teachers,
+        ) = validate_school_form(request.form)
+
+        #handles the case if the form info is not valid
+        if not is_valid:
+            flash("Please fix errors below and try again.","error")
+            return render_template("add_school.html",
+                                   form_data=request.form,
+                                   errors=errors,
+                                   )
+
+        # Inserts info into database
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO schools
+                (name, address, contact_person, contact_phone, contact_email,
+                capacity,  start_time, end_time, exam_dates, holidays, num_teachers)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (name,
+                  address,
+                  contact_person,
+                  contact_phone,
+                  contact_email,
+                  capacity,
+                  start_time,
+                  end_time,
+                  exam_dates,
+                  holidays,
+                  num_teachers),
+            )
+
+            conn.commit()
+            conn.close()
+            
+            flash("School added successfully!", "success")
+            return redirect(url_for("list-schools"))
+
+        except Exception as e:
+            flash(f"Database error: {str(e)}", "danger")
+
+    return render_template("add_school.html", 
+                           form_data={},
+                           errors={},
+                           )
 
 # ---------------------------
 # Run the app

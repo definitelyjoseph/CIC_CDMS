@@ -20,7 +20,6 @@
             <th>Name</th>
             <th>Address</th>
             <th>Contact Person</th>
-            <th>Location</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -30,7 +29,6 @@
             <td>{{ school["name"] }}</td>
             <td>{{ school["address"] }}</td>
             <td>{{ school["contact_person"] }}</td>
-            <td>{{ school["location"] }}</td>
             <td>
                 <a href="{{ url_for('edit_school', school_id=school['id']) }}">Edit</a>
             </td>

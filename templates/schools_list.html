@@ -5,18 +5,24 @@
 
 {% block content %}
 
+<!-- Page heading -->
 <h2>All Schools</h2>
 
-<form method="get" action="{{ url_for('list_schools') }}" class="search-form">
+<!-- Search form -->
+<form method="get" action="{{ url_for('list_schools') }}">
     <label for="search">Search by name:</label>
     <input type="text" id="search" name="search" value="{{ search or '' }}" placeholder="Enter school name">
     <button type="submit">Search</button>
 </form>
 
+<br>
+
+<!-- If there are schools in the database, show them -->
 {% if schools %}
-<table>
+<table border="1" cellpadding="5">
     <thead>
         <tr>
+            <!-- Table headings -->
             <th>Name</th>
             <th>Address</th>
             <th>Contact Person</th>
@@ -24,11 +30,15 @@
         </tr>
     </thead>
     <tbody>
+
+        <!-- Loop through all schools -->
         {% for school in schools %}
         <tr>
             <td>{{ school["name"] }}</td>
             <td>{{ school["address"] }}</td>
             <td>{{ school["contact_person"] }}</td>
+
+            <!-- Link to edit page for this school -->
             <td>
                 <a href="{{ url_for('edit_school', school_id=school['id']) }}">Edit</a>
             </td>
@@ -36,6 +46,8 @@
         {% endfor %}
     </tbody>
 </table>
+
+<!-- If no schools exist -->
 {% else %}
 <p>No schools found.</p>
 {% endif %}

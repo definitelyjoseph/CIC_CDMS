@@ -5,9 +5,10 @@
 
 {% block content %}
 
+<!-- Shows which school you are editing -->
 <h2>Edit School: {{ school['name'] }}</h2>
 
-<!-- Flash messages (success or error) -->
+<!-- Show any messages from Flask (success or error) -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     {% for category, message in messages %}
@@ -16,10 +17,12 @@
   {% endif %}
 {% endwith %}
 
+<!-- Form to edit the school's information -->
 <form method="post">
 
     <br>
 
+    <!-- School name field -->
     <label>School Name (Required)</label><br>
     <input type="text" name="name" value="{{ form_data.name }}" style="width:300px;">
     {% if errors.name %}
@@ -27,6 +30,7 @@
     {% endif %}
     <br><br>
 
+    <!-- Address field -->
     <label>Address (Required)</label><br>
     <input type="text" name="address" value="{{ form_data.address }}" style="width:300px;">
     {% if errors.address %}
@@ -34,6 +38,7 @@
     {% endif %}
     <br><br>
 
+    <!-- Contact person field -->
     <label>Contact Person (Required)</label><br>
     <input type="text" name="contact_person" value="{{ form_data.contact_person }}" style="width:300px;">
     {% if errors.contact_person %}
@@ -41,6 +46,7 @@
     {% endif %}
     <br><br>
 
+    <!-- Contact phone number -->
     <label>Contact Phone</label><br>
     <input type="text" name="contact_phone" value="{{ form_data.contact_phone }}" style="width:300px;">
     {% if errors.contact_phone %}
@@ -48,6 +54,7 @@
     {% endif %}
     <br><br>
 
+    <!-- Email field -->
     <label>Contact Email</label><br>
     <input type="email" name="contact_email" value="{{ form_data.contact_email }}" style="width:300px;">
     {% if errors.contact_email %}
@@ -55,6 +62,7 @@
     {% endif %}
     <br><br>
 
+    <!-- Capacity field -->
     <label>Capacity</label><br>
     <input type="number" name="capacity" value="{{ form_data.capacity }}" style="width:300px;">
     {% if errors.capacity %}
@@ -62,6 +70,7 @@
     {% endif %}
     <br><br>
 
+    <!-- Times -->
     <label>School Start Time</label><br>
     <input type="text" name="start_time" placeholder="e.g. 8:00 AM"
            value="{{ form_data.start_time }}" style="width:300px;">
@@ -72,14 +81,17 @@
            value="{{ form_data.end_time }}" style="width:300px;">
     <br><br>
 
+    <!-- Exam dates -->
     <label>Exam Dates</label><br>
     <textarea name="exam_dates" rows="2" style="width:300px;">{{ form_data.exam_dates }}</textarea>
     <br><br>
 
+    <!-- Holidays -->
     <label>Holidays / Special Notes</label><br>
     <textarea name="holidays" rows="2" style="width:300px;">{{ form_data.holidays }}</textarea>
     <br><br>
 
+    <!-- Number of teachers -->
     <label>Number of Teachers</label><br>
     <input type="number" name="num_teachers" value="{{ form_data.num_teachers }}" style="width:300px;">
     {% if errors.num_teachers %}
@@ -87,9 +99,11 @@
     {% endif %}
     <br><br>
 
+    <!-- Submit button -->
     <button type="submit">Save Changes</button>
     <br><br>
 
+    <!-- Back link -->
     <a href="{{ url_for('list_schools') }}">Back to list</a>
 
 </form>

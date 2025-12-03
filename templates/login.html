@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CDMS Login</title>
+
+    <!-- Basic styling -->
+    <style>
+        body {
+            font-family: Arial;
+            background: #f2f2f2;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+        }
+
+        .box {
+            width:350px;
+            padding:30px;
+            background:white;
+            border-radius:10px;
+            box-shadow:0 0 10px #aaa;
+        }
+
+        .box input {
+            width:100%;
+            padding:10px;
+            margin:10px 0;
+        }
+
+        .error {
+            background:#ffdddd;
+            color:#900;
+            padding:10px;
+            text-align:center;
+        }
+
+        .btn {
+            background:#007bff;
+            color:white;
+            border:none;
+            width:100%;
+            padding:12px;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>CDMS Login</h2>
+
+    <!-- Displays authentication failure -->
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <!--
+    POST == secure submission
+    Form sends credentials to /login for validation
+    -->
+    <form method="POST">
+        <input type="text" name="username" placeholder="Username" required>
+
+        <input type="password" name="password" placeholder="Password" required>
+
+        <button class="btn">Login</button>
+    </form>
+</div>
+
+</body>
+</html>

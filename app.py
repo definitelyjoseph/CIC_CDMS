@@ -40,7 +40,7 @@ def build_where_clause(
     start_date: Optional[date],
     end_date: Optional[date],
     school_id: Optional[int],
-    partner_id: Optional[int],
+    partner_id: Optional[int],  # we still accept it, but we won't use it in SQL
 ) -> Tuple[str, List[Any]]:
     conditions = []
     params: List[Any] = []
@@ -56,15 +56,13 @@ def build_where_clause(
         conditions.append("visit_date <= ?")
         params.append(end_date.isoformat())
 
-    # School filter
+    # School filter (this column DOES exist)
     if report_type == "by_school" and school_id is not None:
         conditions.append("school_id = ?")
         params.append(school_id)
 
-    # Partner filter
-    if report_type == "by_partner" and partner_id is not None:
-        conditions.append("partner_id = ?")
-        params.append(partner_id)
+    # NOTE: we are **not** adding any condition for partner_id here,
+    # because the visits table does not have a partner_id column.
 
     where_clause = ""
     if conditions:
@@ -105,7 +103,7 @@ def fetch_summary(
 
         cur = conn.execute(query, params)
         row = cur.fetchone()
-        
+
 
         if row is None:
             return {

@@ -13,8 +13,8 @@
 <!-- Flash messages for success or errors -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    {% for category, msg in messages %}
-      <div class="alert alert-{{ category }}">{{ msg }}</div>
+    {% for category, message in messages %}
+      <p><strong>{{ category|capitalize }}:</strong> {{ message }}</p>
     {% endfor %}
   {% endif %}
 {% endwith %}
@@ -22,51 +22,88 @@
 <!-- Form to add a new school -->
 <form method="POST">
 
-    <br>
+  <br>
 
     <!-- School Name -->
-	<label class="form-label">School Name (Required)</label>
-    <input type="text" class="form-control" name="name" style="width:500px;">
-
+	  <label>School Name (Required)</label><br>
+    <input type="text" name="name" style="width:500px;">
+    {% if errors.name %}
+        <small style="color:red;">{{ errors.name }}</small>
+    {% endif %}
+    <br><br>
+    
     <!-- Address -->
-    <label class="form-label">Address (Required)</label>
-    <input type="text" class="form-control" name="address" style="width:500px;">
+    <label>Address (Required)</label><br>
+    <input type="text" name="address" style="width:500px;">
+    {% if errors.address %}
+        <small style="color:red;">{{ errors.address }}</small>
+    {% endif %}
+    <br><br>
 
     <!-- Contact -->
-    <label class="form-label">Contact Person (Required)</label>
-    <input type="text" class="form-control" name="contact_person" style="width:500px;">
+    <label>Contact Person (Required)</label><br>
+    <input type="text" name="contact_person" style="width:500px;">
+    {% if errors.contact_person %}
+        <small style="color:red;">{{ errors.contact_person }}</small>
+    {% endif %}
+    <br><br>
 
-    <label class="form-label">Contact Phone</label>
-    <input type="text" class="form-control" name="contact_phone" style="width:500px;">
+    <label>Contact Phone</label><br>
+    <input type="text" name="contact_phone" value="{{ form_data.contact_phone }}" style="width:500px;">
+    {% if errors.contact_phone %}
+        <small style="color:red;">{{ errors.contact_phone }}</small>
+    {% endif %}
+    <br><br>
 
-    <label class="form-label">Contact Email</label>
-    <input type="text" class="form-control" name="contact_email" style="width:500px;">
+    <label>Contact Email</label><br>
+    <input type="text" name="contact_email" style="width:500px;">
+    {% if errors.contact_email %}
+        <small style="color:red;">{{ errors.contact_email }}</small>
+    {% endif %}
+    <br><br>
 
     <!-- Numbers -->
-    <label class="form-label">Capacity</label>
-    <input type="number" class="form-control" name="capacity" style="width:500px;">
+    <label>Capacity</label><br>
+    <input type="number" name="capacity" style="width:500px;">
+    {% if errors.capacity %}
+        <small style="color:red;">{{ errors.capacity }}</small>
+    {% endif %}
+    <br><br>
 
     <!-- Times -->
-    <label class="form-label">Start Time</label>
-    <input type="time" class="form-control" name="start_time" style="width:500px;">
+    <label>Start Time</label><br>
+    <input type="text" name="start_time" placeholder="e.g. 8:00 AM"
+           value="{{ form_data.start_time }}" style="width:300px;">
+    <br><br>
 
-    <label class="form-label">End Time</label>
-    <input type="time" class="form-control" name="end_time" style="width:500px;">
+    <label>End Time</label><br>
+    <input type="text" name="end_time" placeholder="e.g. 2:30 PM"
+           value="{{ form_data.end_time }}" style="width:300px;">
+    <br><br>
+
 
     <!-- Larger text fields -->
-    <label class="form-label">Exam Dates</label>
-    <textarea class="form-control" name="exam_dates" style="width:500px;"></textarea>
+    <label>Exam Dates</label><br>
+    <textarea name="exam_dates" rows="2" style="width:500px;">{{ form_data.exam_dates }}</textarea>
+    <br><br>
+  
+    <label>Holidays</label><br>
+    <textarea name="holidays" rows="2" style="width:300px;">{{ form_data.holidays }}</textarea>
+    <br><br>
 
-    <label class="form-label">Holidays</label>
-    <textarea class="form-control" name="holidays" style="width:500px;"></textarea>
-
-    <label class="form-label">Number of Teachers</label>
-    <input type="number" class="form-control" name="num_teachers" style="width:500px;">
+    <label>Number of Teachers</label>
+    <input type="number" name="num_teachers" style="width:500px;">
+    {% if errors.num_teachers %}
+        <small style="color:red;">{{ errors.num_teachers }}</small>
+    {% endif %}
+    <br><br>
 
     <br>
 
     <!-- Buttons -->
     <button type="submit" class="btn btn-primary">Save School</button>
+    <br><br>
+
     <a href="{{ url_for('list_schools') }}" class="back-link">Back to list</a>
 
 </form>

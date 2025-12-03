@@ -99,9 +99,6 @@ def fetch_summary(
             SELECT
                 COUNT(DISTINCT school_id)        AS number_of_schools,
                 COUNT(*)                         AS number_of_visits,
-                COALESCE(SUM(students_count), 0) AS total_students,
-                COALESCE(SUM(teachers_count), 0) AS total_teachers,
-                COALESCE(SUM(parents_count), 0)  AS total_parents
             FROM visits
             {where_clause};
         """
@@ -113,9 +110,6 @@ def fetch_summary(
             return {
                 "number_of_schools": 0,
                 "number_of_visits": 0,
-                "total_students": 0,
-                "total_teachers": 0,
-                "total_parents": 0,
             }
 
         return dict(row)

@@ -1,59 +1,57 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Generate Summary Report</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-  <h1>Generate Summary Report</h1>
+{% extends "base.html" %}
 
-  {% with messages = get_flashed_messages() %}
+{% block content %}
+<h1>Generate Summary Report</h1>
+
+{% with messages = get_flashed_messages() %}
     {% if messages %}
-      <ul>
+        <ul>
         {% for msg in messages %}
-          <li>{{ msg }}</li>
+            <li>{{ msg }}</li>
         {% endfor %}
-      </ul>
+        </ul>
     {% endif %}
-  {% endwith %}
+{% endwith %}
 
-  <form method="post" action="{{ url_for('generate_report') }}">
+<form method="post" action="{{ url_for('generate_report') }}">
     <fieldset>
-      <legend>Report Type</legend>
-      <label>
-        <input type="radio" name="report_type" value="by_date_range" checked>
-        By Date Range
-      </label><br>
-      <label>
-        <input type="radio" name="report_type" value="by_school">
-        By School
-      </label><br>
-      <label>
-        <input type="radio" name="report_type" value="by_partner">
-        By Partner
-      </label>
+        <legend>Report Type</legend>
+
+        <label>
+            <input type="radio" name="report_type" value="by_date_range" checked>
+            By Date Range
+        </label><br>
+
+        <label>
+            <input type="radio" name="report_type" value="by_school">
+            By School
+        </label><br>
+
+        <label>
+            <input type="radio" name="report_type" value="by_partner">
+            By Partner
+        </label>
     </fieldset>
 
     <br>
 
     <fieldset>
-      <legend>Filters</legend>
-      <label for="start_date">Start Date:</label>
-      <input type="date" id="start_date" name="start_date"><br><br>
+        <legend>Filters</legend>
 
-      <label for="end_date">End Date:</label>
-      <input type="date" id="end_date" name="end_date"><br><br>
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date"><br><br>
 
-      <label for="school_id">School ID (for "By School"):</label>
-      <input type="number" id="school_id" name="school_id" min="1"><br><br>
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date"><br><br>
 
-      <label for="partner_id">Partner ID (for "By Partner"):</label>
-      <input type="number" id="partner_id" name="partner_id" min="1">
+        <label for="school_id">School ID (for "By School"):</label>
+        <input type="number" id="school_id" name="school_id" min="1"><br><br>
+
+        <label for="partner_id">Partner ID (for "By Partner"):</label>
+        <input type="number" id="partner_id" name="partner_id" min="1">
     </fieldset>
 
     <br>
     <button type="submit">Generate Report</button>
-  </form>
-</body>
-</html>
+</form>
+{% endblock %}

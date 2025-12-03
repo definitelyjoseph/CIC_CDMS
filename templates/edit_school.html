@@ -70,15 +70,17 @@
     {% endif %}
     <br><br>
 
-    <!-- Times -->
+    <!-- Times (CHANGED TO TIME SELECTORS) -->
     <label>School Start Time</label><br>
-    <input type="text" name="start_time" placeholder="e.g. 8:00 AM"
-           value="{{ form_data.start_time }}" style="width:300px;">
+    <!-- ADDED: use type="time" instead of plain text -->
+    <input type="time" name="start_time"
+           value="{{ form_data.start_time }}" style="width:150px;">
     <br><br>
 
     <label>School End Time</label><br>
-    <input type="text" name="end_time" placeholder="e.g. 2:30 PM"
-           value="{{ form_data.end_time }}" style="width:300px;">
+    <!-- ADDED: use type="time" instead of plain text -->
+    <input type="time" name="end_time"
+           value="{{ form_data.end_time }}" style="width:150px;">
     <br><br>
 
     <!-- Exam dates -->
@@ -106,6 +108,14 @@
     <!-- Back link -->
     <a href="{{ url_for('list_schools') }}">Back to list</a>
 
+</form>
+
+<!-- ADDED: Separate form to delete this school -->
+<form method="post"
+      action="{{ url_for('delete_school', school_id=school['id']) }}"
+      onsubmit="return confirm('Are you sure you want to delete this school?');">
+    <br>
+    <button type="submit">Delete School</button>
 </form>
 
 {% endblock %}

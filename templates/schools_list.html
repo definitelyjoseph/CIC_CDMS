@@ -38,9 +38,18 @@
             <td>{{ school["address"] }}</td>
             <td>{{ school["contact_person"] }}</td>
 
-            <!-- Link to edit page for this school -->
+            <!-- Actions: Edit + Delete -->
             <td>
+                <!-- Existing Edit link -->
                 <a href="{{ url_for('edit_school', school_id=school['id']) }}">Edit</a>
+
+                <!-- ADDED: Simple inline delete form -->
+                <form method="post"
+                      action="{{ url_for('delete_school', school_id=school['id']) }}"
+                      style="display:inline;"
+                      onsubmit="return confirm('Delete this school?');">
+                    <button type="submit">Delete</button>
+                </form>
             </td>
         </tr>
         {% endfor %}

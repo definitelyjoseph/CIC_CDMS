@@ -282,6 +282,35 @@ def edit_school(school_id):
         form_data=school,
         errors={},
     )
+# ---------------------------
+# Delete school information
+# ---------------------------
+@app.route("/schools/<int:school_id>/delete", methods=["POST"])
+def delete_school(school_id):
+    """
+    Simple route to delete a school from the database.
+    Uses sqlite3 directly (same style as list_schools and edit_school).
+    """
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Check if the school exists first (optional but nice)
+    cursor.execute("SELECT id FROM schools WHERE id = ?", (school_id,))
+    school = cursor.fetchone()
+
+    if school is None:
+        conn.close()
+        flash("School not found.", "error")
+        return redirect(url_for("list_schools"))
+
+    # Delete the school
+    cursor.execute("DELETE FROM schools WHERE id = ?", (school_id,))
+    conn.commit()
+    conn.close()
+
+    flash("School deleted successfully.", "success")
+    return redirect(url_for("list_schools"))
 
 # ---------------------------
 # Add new school information

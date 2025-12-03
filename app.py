@@ -3,45 +3,40 @@ import sqlite3
 import os
 
 app = Flask(__name__)
-app.secret_key = "very-simple-secret-key"  # you can change this
+app.secret_key = "very-simple-secret-key"  # used for flash messages
 
-# Path to your SQLite database
+# The SQLite database file
 DATABASE = os.path.join(os.path.dirname(__file__), "cdms.db")
 
 
 # ---------------------------
-# DATABASE CONNECTION HELPER
+# Connect to the database
 # ---------------------------
-
 def get_db_connection():
-    """
-    Open a connection to the SQLite database.
-    """
     conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
+    conn.row_factory = sqlite3.Row  # allows column names
     return conn
 
 
 # ---------------------------
-# FORM VALIDATION
+# Check if form data is valid
 # ---------------------------
-
 def validate_school_form(form):
-    """
-    Check if the form data is valid.
-    Returns:
-      - is_valid (True/False)
-      - errors (dict)
-      - cleaned_data (dict)
-    """
     errors = {}
-    cleaned = {}
 
-    # Required fields
+    # Get values from the form and remove extra spaces
     name = form.get("name", "").strip()
     address = form.get("address", "").strip()
     contact_person = form.get("contact_person", "").strip()
 
+    contact_phone = form.get("contact_phone", "").strip()
+    contact_email = form.get("contact_email", "").strip()
+    start_time = form.get("start_time", "").strip()
+    end_time = form.get("end_time", "").strip()
+    exam_dates = form.get("exam_dates", "").strip()
+    holidays = form.get("holidays", "").strip()
+
+    # Required fields must not be empty
     if not name:
         errors["name"] = "School name is required."
     if not address:
@@ -49,66 +44,67 @@ def validate_school_form(form):
     if not contact_person:
         errors["contact_person"] = "Contact person is required."
 
-    cleaned["name"] = name
-    cleaned["address"] = address
-    cleaned["contact_person"] = contact_person
-
-    # Optional fields
-    cleaned["contact_phone"] = form.get("contact_phone", "").strip()
-    cleaned["contact_email"] = form.get("contact_email", "").strip()
-    cleaned["start_time"] = form.get("start_time", "").strip()
-    cleaned["end_time"] = form.get("end_time", "").strip()
-    cleaned["exam_dates"] = form.get("exam_dates", "").strip()
-    cleaned["holidays"] = form.get("holidays", "").strip()
-
-    # Capacity
+    # Capacity validation
     capacity_value = form.get("capacity", "").strip()
     if capacity_value == "":
-        cleaned["capacity"] = None
+        capacity = None
     else:
         try:
-            cleaned["capacity"] = int(capacity_value)
-            if cleaned["capacity"] < 0:
+            capacity = int(capacity_value)
+            if capacity < 0:
                 errors["capacity"] = "Capacity cannot be negative."
         except ValueError:
             errors["capacity"] = "Capacity must be a whole number."
 
-    # Number of teachers
-    num_teachers_value = form.get("num_teachers", "").strip()
-    if num_teachers_value == "":
-        cleaned["num_teachers"] = None
+    # Number of teachers validation
+    teachers_value = form.get("num_teachers", "").strip()
+    if teachers_value == "":
+        num_teachers = None
     else:
         try:
-            cleaned["num_teachers"] = int(num_teachers_value)
-            if cleaned["num_teachers"] < 0:
+            num_teachers = int(teachers_value)
+            if num_teachers < 0:
                 errors["num_teachers"] = "Number of teachers cannot be negative."
         except ValueError:
             errors["num_teachers"] = "Number of teachers must be a whole number."
 
-    # Simple email check
-    email = cleaned["contact_email"]
-    if email and "@" not in email:
+    # Email check (basic)
+    if contact_email and "@" not in contact_email:
         errors["contact_email"] = "Please enter a valid email address."
 
+    # Return everything so we can use these values later
     is_valid = (len(errors) == 0)
-    return is_valid, errors, cleaned
+
+    return (
+        is_valid,
+        errors,
+        name,
+        address,
+        contact_person,
+        contact_phone,
+        contact_email,
+        capacity if capacity_value != "" else None,
+        start_time,
+        end_time,
+        exam_dates,
+        holidays,
+        num_teachers if teachers_value != "" else None,
+    )
 
 
 # ---------------------------
-# ROUTES
+# Home → redirect to schools list
 # ---------------------------
-
 @app.route("/")
 def home():
-    # Redirect to the schools list
     return redirect(url_for("list_schools"))
 
 
+# ---------------------------
+# Show list of all schools
+# ---------------------------
 @app.route("/schools")
 def list_schools():
-    """
-    Show list of schools with optional search.
-    """
     search_term = request.args.get("search", "").strip()
 
     conn = get_db_connection()
@@ -139,14 +135,16 @@ def list_schools():
     return render_template("schools_list.html", schools=schools, search=search_term)
 
 
+# ---------------------------
+# Edit school information
+# ---------------------------
 @app.route("/schools/<int:school_id>/edit", methods=["GET", "POST"])
 def edit_school(school_id):
-    """
-    View + update an existing school.
-    """
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Get the current school data
     cursor.execute("SELECT * FROM schools WHERE id = ?", (school_id,))
     school = cursor.fetchone()
 
@@ -156,8 +154,24 @@ def edit_school(school_id):
         return redirect(url_for("list_schools"))
 
     if request.method == "POST":
-        is_valid, errors, cleaned = validate_school_form(request.form)
 
+        (
+            is_valid,
+            errors,
+            name,
+            address,
+            contact_person,
+            contact_phone,
+            contact_email,
+            capacity,
+            start_time,
+            end_time,
+            exam_dates,
+            holidays,
+            num_teachers,
+        ) = validate_school_form(request.form)
+
+        # If errors → show form again with messages
         if not is_valid:
             flash("Please fix the errors below and try again.", "error")
             conn.close()
@@ -168,7 +182,7 @@ def edit_school(school_id):
                 errors=errors,
             )
 
-        # Update school record (location removed)
+        # Update database if everything is valid
         cursor.execute(
             """
             UPDATE schools
@@ -187,17 +201,17 @@ def edit_school(school_id):
             WHERE id = ?
             """,
             (
-                cleaned["name"],
-                cleaned["address"],
-                cleaned["contact_person"],
-                cleaned["contact_phone"],
-                cleaned["contact_email"],
-                cleaned["capacity"],
-                cleaned["start_time"],
-                cleaned["end_time"],
-                cleaned["exam_dates"],
-                cleaned["holidays"],
-                cleaned["num_teachers"],
+                name,
+                address,
+                contact_person,
+                contact_phone,
+                contact_email,
+                capacity,
+                start_time,
+                end_time,
+                exam_dates,
+                holidays,
+                num_teachers,
                 school_id,
             ),
         )
@@ -207,7 +221,7 @@ def edit_school(school_id):
         flash("School information updated successfully.", "success")
         return redirect(url_for("edit_school", school_id=school_id))
 
-    # GET request: show form with existing data
+    # GET → show form with existing data
     conn.close()
     return render_template(
         "edit_school.html",
@@ -218,9 +232,8 @@ def edit_school(school_id):
 
 
 # ---------------------------
-# RUN APP
+# Run the app
 # ---------------------------
-
 if __name__ == "__main__":
     app.run(debug=True)
     

@@ -2,45 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+
+  <!-- This is the title that each page can change -->
   <title>{% block title %}Captain I Can!{% endblock %}</title>
 
-  <!-- No custom CSS file -->
-  <!-- No Font Awesome icons -->
 </head>
 <body>
 
-  <!-- Simple two-column layout using a table -->
+  <!-- Using a simple table to create a two-column layout -->
   <table width="100%" border="0">
     <tr>
 
-      <!-- SIDEBAR AREA -->
+      <!-- LEFT SIDE: Sidebar menu -->
       <td valign="top" width="200">
+
+        <!-- System name -->
         <h2>Captain I Can!</h2>
         <p><strong>CDMS</strong></p>
 
         <h3>Menu</h3>
 
-        <!-- Very simple HTML list menu -->
+        <!-- List of links to different pages -->
         <ul style="list-style-type: none; padding-left: 0;">
           <li><a href="#">Add New School</a></li>
           <li><a href="{{ url_for('list_schools') }}">Schools</a></li>
           <li><a href="#">Schedule Visits</a></li>
           <li><a href="#">Reports</a></li>
           <li><a href="#">Feedback</a></li>
-          <li><a href="#">Settings</a></li>
         </ul>
 
+        <!-- Footer text for version info -->
         <p><small>v1.0 • Student Demo</small></p>
+
       </td>
 
-      <!-- MAIN CONTENT AREA -->
+      <!-- RIGHT SIDE: Main page content area -->
       <td valign="top" style="padding-left: 20px;">
 
+        <!-- Each page can set its own title here -->
         <h1>
           {% block page_title %}Captain I Can!{% endblock %}
         </h1>
 
-        <!-- Flash messages for success/errors -->
+        <!-- Show flash messages (success or error) sent from Flask -->
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             <div>
@@ -51,7 +55,7 @@
           {% endif %}
         {% endwith %}
 
-        <!-- PAGE CONTENT GOES HERE -->
+        <!-- This is where each page will put its own content -->
         {% block content %}{% endblock %}
 
       </td>

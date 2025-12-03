@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS schools (
     contact_phone TEXT,
     contact_email TEXT,
     capacity INTEGER,
-    location TEXT,
     start_time TEXT,
     end_time TEXT,
     exam_dates TEXT,

@@ -8,10 +8,16 @@ from sqlalchemy import and_
 app = Flask(__name__)
 app.secret_key = "very-simple-secret-key"  # used for flash messages
 
-# The SQLite database file
+# The SQLite database file (USED BY BOTH sqlite3 AND SQLAlchemy)
 DATABASE = os.path.join(os.path.dirname(__file__), "cdms.db")
 
+# --- SQLAlchemy config (THIS was missing) ---
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + DATABASE
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Now it's safe to initialize SQLAlchemy
 db = SQLAlchemy(app)
+
 
 # ---------------------------
 # Connect to the database
@@ -24,6 +30,8 @@ def get_db_connection():
 # ---------- MODELS ----------
 
 class School(db.Model):
+    __tablename__ = "schools"  # match your existing SQLite table name
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     capacity = db.Column(db.Integer)
@@ -37,18 +45,26 @@ class School(db.Model):
 
     visits = db.relationship('Visit', backref='school', lazy=True)
 
+
 class Visit(db.Model):
+    __tablename__ = "visits"
+
     id = db.Column(db.Integer, primary_key=True)
-    school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+    # FK must point to "schools.id" now
+    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
     visit_date = db.Column(db.Date, nullable=False)
     visit_time = db.Column(db.String(20), nullable=False)
     status = db.Column(db.String(20), default='Scheduled')  # Scheduled/Completed
 
     feedbacks = db.relationship('Feedback', backref='visit', lazy=True)
 
+
 class Feedback(db.Model):
+    __tablename__ = "feedback"  # or "feedbacks", just be consistent
+
     id = db.Column(db.Integer, primary_key=True)
-    visit_id = db.Column(db.Integer, db.ForeignKey('visit.id'), nullable=False)
+    # FK must point to "visits.id"
+    visit_id = db.Column(db.Integer, db.ForeignKey('visits.id'), nullable=False)
     rating = db.Column(db.Integer)  # 1–5
     comments = db.Column(db.Text)
     submitted_by = db.Column(db.String(100))
@@ -391,5 +407,7 @@ def schedule_visit():
 # Run the app
 # ---------------------------
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()  # Create tables if they don't exist
     app.run(debug=True)
     

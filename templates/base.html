@@ -4,87 +4,59 @@
   <meta charset="utf-8">
   <title>{% block title %}Captain I Can!{% endblock %}</title>
 
-  <!-- Main stylesheet -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-
-  <!-- Icon library (Font Awesome CDN) -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
+  <!-- No custom CSS file -->
+  <!-- No Font Awesome icons -->
 </head>
 <body>
 
-<div class="layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-circle">C</div>
-      <div class="logo-text">
-        <span class="logo-title">Captain I Can!</span>
-        <span class="logo-sub">CDMS</span>
-      </div>
-    </div>
+  <!-- Simple two-column layout using a table -->
+  <table width="100%" border="0">
+    <tr>
 
-    <nav class="sidebar-nav">
-      <a href="{{ url_for('list_schools') }}" class="sidebar-link">
-        <i class="fa-solid fa-school"></i>
-        <span>Schools</span>
-      </a>
+      <!-- SIDEBAR AREA -->
+      <td valign="top" width="200">
+        <h2>Captain I Can!</h2>
+        <p><strong>CDMS</strong></p>
 
-      <!-- These can be hooked up later when your teammates add routes -->
-      <a href="#" class="sidebar-link disabled-link">
-        <i class="fa-solid fa-calendar-days"></i>
-        <span>Schedule Visits</span>
-      </a>
+        <h3>Menu</h3>
 
-      <a href="#" class="sidebar-link disabled-link">
-        <i class="fa-solid fa-chart-column"></i>
-        <span>Reports</span>
-      </a>
+        <!-- Very simple HTML list menu -->
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li><a href="{{ url_for('list_schools') }}">Schools</a></li>
+          <li><a href="#">Schedule Visits</a></li>
+          <li><a href="#">Reports</a></li>
+          <li><a href="#">Feedback</a></li>
+          <li><a href="#">Settings</a></li>
+        </ul>
 
-      <a href="#" class="sidebar-link disabled-link">
-        <i class="fa-solid fa-comments"></i>
-        <span>Feedback</span>
-      </a>
+        <p><small>v1.0 • Student Demo</small></p>
+      </td>
 
-      <a href="#" class="sidebar-link disabled-link">
-        <i class="fa-solid fa-gear"></i>
-        <span>Settings</span>
-      </a>
-    </nav>
+      <!-- MAIN CONTENT AREA -->
+      <td valign="top" style="padding-left: 20px;">
 
-    <div class="sidebar-footer">
-      <span class="sidebar-footer-text">v1.0 • Student Demo</span>
-    </div>
-  </aside>
+        <h1>
+          {% block page_title %}Captain I Can!{% endblock %}
+        </h1>
 
-  <!-- MAIN AREA -->
-  <div class="main-area">
-    <header class="topbar">
-      <h1 class="topbar-title">
-        {% block page_title %}Captain I Can!{% endblock %}
-      </h1>
-    </header>
+        <!-- Flash messages for success/errors -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div>
+              {% for category, message in messages %}
+                <p><strong>{{ category|capitalize }}:</strong> {{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-container">
-          {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">{{ message }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+        <!-- PAGE CONTENT GOES HERE -->
+        {% block content %}{% endblock %}
 
-    <main class="main-content">
-      {% block content %}{% endblock %}
-    </main>
-  </div>
-</div>
+      </td>
+
+    </tr>
+  </table>
 
 </body>
 </html>

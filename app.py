@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
+from functools import wraps
 import sqlite3
 import os
 import csv
@@ -9,7 +10,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
 app = Flask(__name__)
-app.secret_key = "very-simple-secret-key"  # used for flash messages
+app.secret_key = "very-simple-secret-key"  # ADDED: for session management
 
 # The SQLite database file (USED BY BOTH sqlite3 AND SQLAlchemy)
 DATABASE = os.path.join(os.path.dirname(__file__), "cdms.db")
@@ -26,6 +27,24 @@ REPORTS_DIR = Path("reports")
 REPORTS_DIR.mkdir(exist_ok=True)
 
 
+# ========================================
+# SECURITY FEATURE - START
+# ========================================
+
+def login_required(f):
+    """Decorator to protect routes. Add @login_required above any protected route."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logged_in' not in session:
+            flash('Please log in to access this page.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ========================================
+# SECURITY FEATURE - END
+# ========================================
+
 
 # ---------------------------
 # Connect to the database
@@ -40,7 +59,7 @@ def build_where_clause(
     start_date: Optional[date],
     end_date: Optional[date],
     school_id: Optional[int],
-    partner_id: Optional[int],  # we still accept it, but we won't use it in SQL
+    partner_id: Optional[int],
 ) -> Tuple[str, List[Any]]:
     conditions = []
     params: List[Any] = []
@@ -56,13 +75,15 @@ def build_where_clause(
         conditions.append("visit_date <= ?")
         params.append(end_date.isoformat())
 
-    # School filter (this column DOES exist)
+    # School filter
     if report_type == "by_school" and school_id is not None:
         conditions.append("school_id = ?")
         params.append(school_id)
 
-    # NOTE: we are **not** adding any condition for partner_id here,
-    # because the visits table does not have a partner_id column.
+    # Partner filter
+    if report_type == "by_partner" and partner_id is not None:
+        conditions.append("partner_id = ?")
+        params.append(partner_id)
 
     where_clause = ""
     if conditions:
@@ -95,8 +116,11 @@ def fetch_summary(
 
         query = f"""
             SELECT
-                COUNT(DISTINCT school_id) AS number_of_schools,
-                COUNT(*)                  AS number_of_visits
+                COUNT(DISTINCT school_id)        AS number_of_schools,
+                COUNT(*)                         AS number_of_visits,
+                COALESCE(SUM(students_count), 0) AS total_students,
+                COALESCE(SUM(teachers_count), 0) AS total_teachers,
+                COALESCE(SUM(parents_count), 0)  AS total_parents
             FROM visits
             {where_clause};
         """
@@ -104,11 +128,13 @@ def fetch_summary(
         cur = conn.execute(query, params)
         row = cur.fetchone()
 
-
         if row is None:
             return {
                 "number_of_schools": 0,
                 "number_of_visits": 0,
+                "total_students": 0,
+                "total_teachers": 0,
+                "total_parents": 0,
             }
 
         return dict(row)
@@ -252,18 +278,58 @@ def validate_school_form(form):
     )
 
 
-# ---------------------------
-# Home → redirect to schools list
-# ---------------------------
+# ========================================
+# LOGIN/LOGOUT ROUTES (ADDED)
+# ========================================
+
 @app.route("/")
 def home():
-    return redirect(url_for("list_schools"))
+    """Home → redirect based on login status"""
+    if 'logged_in' in session:
+        return redirect(url_for("list_schools"))
+    return redirect(url_for("login"))
 
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Simple login - hardcoded credentials"""
+    if 'logged_in' in session:
+        return redirect(url_for("list_schools"))
+    
+    if request.method == "POST":
+        username = request.form.get("username", "")
+        password = request.form.get("password", "")
+
+        # Simple check: username = admin, password = admin123
+        if username == "admin" and password == "admin123":
+            session['logged_in'] = True
+            session['username'] = username
+            flash("Welcome! You are now logged in.", "success")
+            return redirect(url_for("list_schools"))
+        else:
+            # Show error in template instead of flash message
+            return render_template("login.html", error="Wrong password or username. Please try again.")
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    """Logout"""
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("login"))
+
+
+# ========================================
+# ORIGINAL ROUTES (Protection Added)
+# ========================================
 
 # ---------------------------
 # Show list of all schools
 # ---------------------------
 @app.route("/schools")
+@login_required  # ADDED
 def list_schools():
     search_term = request.args.get("search", "").strip()
 
@@ -299,6 +365,7 @@ def list_schools():
 # Edit school information
 # ---------------------------
 @app.route("/schools/<int:school_id>/edit", methods=["GET", "POST"])
+@login_required  # ADDED
 def edit_school(school_id):
 
     conn = get_db_connection()
@@ -393,6 +460,7 @@ def edit_school(school_id):
 # Delete school information
 # ---------------------------
 @app.route("/schools/<int:school_id>/delete", methods=["POST"])
+@login_required  # ADDED
 def delete_school(school_id):
     """
     Simple route to delete a school from the database.
@@ -402,7 +470,7 @@ def delete_school(school_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Check if the school exists first (optional but nice)
+    # Check if the school exists first 
     cursor.execute("SELECT id FROM schools WHERE id = ?", (school_id,))
     school = cursor.fetchone()
 
@@ -424,6 +492,7 @@ def delete_school(school_id):
 # ---------------------------
 #this route creates a webpage at /schools/add
 @app.route("/schools/add", methods=["GET", "POST"]) 
+@login_required  # ADDED
 def add_school():
     if request.method == "POST":
         '''below calls the existing valid_school_form function that will check
@@ -496,12 +565,14 @@ def add_school():
 from sqlalchemy import and_
 
 @app.route('/visits', methods=['GET'])
+@login_required  # ADDED
 def list_visits():
     visits = Visit.query.order_by(Visit.visit_date.desc()).all()
     return render_template('visits/list.html', visits=visits)
 
 
 @app.route('/visits/schedule', methods=['GET', 'POST'])
+@login_required  # ADDED
 def schedule_visit():
     schools = School.query.all()
 
@@ -543,6 +614,7 @@ def schedule_visit():
 # ---------------------------
 
 @app.route("/reports", methods=["GET", "POST"])
+@login_required  # ADDED
 def generate_report():
     """Generate summary reports based on date range, school, or partner."""
     if request.method == "GET":
@@ -600,6 +672,7 @@ def generate_report():
 
 
 @app.route("/reports/download/<filename>")
+@login_required  # ADDED
 def download_report(filename: str):
     """Download a previously generated CSV report."""
     file_path = REPORTS_DIR / filename
@@ -622,4 +695,3 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()  # Create tables if they don't exist
     app.run(debug=True)
-    

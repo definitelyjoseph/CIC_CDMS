@@ -1,168 +1,208 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, g
+from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 import os
-from datetime import datetime
 
-# --- CONFIG -----------------------------------------------------------------
-
-DATABASE = os.path.join(os.path.dirname(__file__), "cdms.db")
-SECRET_KEY = "change-this-in-production"  # needed for flash() messages
+# -----------------------------------------
+# BASIC APP SETUP
+# -----------------------------------------
 
 app = Flask(__name__)
-app.config["DATABASE"] = DATABASE
-app.config["SECRET_KEY"] = SECRET_KEY
+
+# This is needed so we can use flash() messages
+app.secret_key = "very-simple-secret-key"  # you can change this
+
+# This is the name of your SQLite database file
+DATABASE = os.path.join(os.path.dirname(__file__), "cdms.db")
 
 
-# --- DATABASE HELPERS -------------------------------------------------------
+# -----------------------------------------
+# SIMPLE HELPER TO CONNECT TO THE DATABASE
+# -----------------------------------------
 
-def get_db():
-    """Get a connection to the SQLite database for the current request."""
-    if "db" not in g:
-        g.db = sqlite3.connect(app.config["DATABASE"])
-        g.db.row_factory = sqlite3.Row  # access columns by name
-    return g.db
-
-
-@app.teardown_appcontext
-def close_db(exception):
-    """Close the database connection at the end of the request."""
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
+def get_db_connection():
+    """
+    This function opens a connection to the SQLite database.
+    We call it whenever we need to talk to the database.
+    """
+    conn = sqlite3.connect(DATABASE)
+    # This lets us access rows like a dictionary, e.g. row["name"]
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
-# --- UTILITY: SIMPLE VALIDATION --------------------------------------------
+# -----------------------------------------
+# SIMPLE FORM VALIDATION FUNCTION
+# -----------------------------------------
 
 def validate_school_form(form):
     """
-    Validate update form input.
-    Returns (is_valid, errors_dict, cleaned_data_dict)
+    This function checks if the form data is valid.
+    It returns:
+      - is_valid (True/False)
+      - errors (dictionary with error messages)
+      - cleaned_data (dictionary with cleaned/converted values)
     """
     errors = {}
     cleaned = {}
 
-    # Required fields (simple non-empty check)
-    required_fields = ["name", "address", "contact_person"]
-    for field in required_fields:
-        value = form.get(field, "").strip()
-        if not value:
-            errors[field] = "This field is required."
-        cleaned[field] = value
+    # Get values from form (strip spaces)
+    name = form.get("name", "").strip()
+    address = form.get("address", "").strip()
+    contact_person = form.get("contact_person", "").strip()
 
-    # Optional text fields
-    for field in [
-        "contact_phone",
-        "contact_email",
-        "capacity",
-        "location",
-        "start_time",
-        "end_time",
-        "exam_dates",
-        "holidays",
-        "num_teachers",
-    ]:
-        cleaned[field] = form.get(field, "").strip()
+    # Required fields: they cannot be empty
+    if not name:
+        errors["name"] = "School name is required."
+    if not address:
+        errors["address"] = "Address is required."
+    if not contact_person:
+        errors["contact_person"] = "Contact person is required."
 
-    # Basic numeric validation
-    for numeric_field in ["capacity", "num_teachers"]:
-        value = cleaned.get(numeric_field)
-        if value:
-            try:
-                int_value = int(value)
-                if int_value < 0:
-                    raise ValueError
-                cleaned[numeric_field] = int_value
-            except ValueError:
-                errors[numeric_field] = "Please enter a valid non-negative integer."
+    cleaned["name"] = name
+    cleaned["address"] = address
+    cleaned["contact_person"] = contact_person
 
-    # (Optional) very light email check
-    email = cleaned.get("contact_email")
+    # Optional fields
+    cleaned["contact_phone"] = form.get("contact_phone", "").strip()
+    cleaned["contact_email"] = form.get("contact_email", "").strip()
+    cleaned["location"] = form.get("location", "").strip()
+    cleaned["start_time"] = form.get("start_time", "").strip()
+    cleaned["end_time"] = form.get("end_time", "").strip()
+    cleaned["exam_dates"] = form.get("exam_dates", "").strip()
+    cleaned["holidays"] = form.get("holidays", "").strip()
+
+    # Numbers: capacity and num_teachers
+    # These can be empty, but if the user types something it must be a valid number.
+    capacity_value = form.get("capacity", "").strip()
+    if capacity_value == "":
+        cleaned["capacity"] = None
+    else:
+        try:
+            cleaned["capacity"] = int(capacity_value)
+            if cleaned["capacity"] < 0:
+                errors["capacity"] = "Capacity cannot be negative."
+        except ValueError:
+            errors["capacity"] = "Capacity must be a whole number."
+
+    num_teachers_value = form.get("num_teachers", "").strip()
+    if num_teachers_value == "":
+        cleaned["num_teachers"] = None
+    else:
+        try:
+            cleaned["num_teachers"] = int(num_teachers_value)
+            if cleaned["num_teachers"] < 0:
+                errors["num_teachers"] = "Number of teachers cannot be negative."
+        except ValueError:
+            errors["num_teachers"] = "Number of teachers must be a whole number."
+
+    # Very simple email check: if there is an email, it should contain "@"
+    email = cleaned["contact_email"]
     if email and "@" not in email:
         errors["contact_email"] = "Please enter a valid email address."
 
-    is_valid = len(errors) == 0
+    is_valid = (len(errors) == 0)
     return is_valid, errors, cleaned
 
 
-# --- ROUTES FOR FEATURE 2 ---------------------------------------------------
+# -----------------------------------------
+# ROUTES
+# -----------------------------------------
 
 @app.route("/")
-def index():
-    """Redirect to schools listing (so staff can quickly find a school)."""
+def home():
+    """
+    This is the homepage.
+    For now, we just send the user to the schools list.
+    """
     return redirect(url_for("list_schools"))
 
 
 @app.route("/schools")
 def list_schools():
     """
-    System Requirement 2.1:
-        Display a list of schools for the user to select.
-    Extra: simple search by name to help meet the 15-second acceptance criteria.
+    This page shows a list of schools.
+    It also supports searching by school name.
+    This helps with the acceptance criteria:
+      - staff can find and edit school info quickly (under 15 seconds).
     """
-    db = get_db()
-    search = request.args.get("search", "").strip()
+    search_term = request.args.get("search", "").strip()
 
-    if search:
-        schools = db.execute(
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if search_term:
+        # Search by name using LIKE
+        cursor.execute(
             """
             SELECT id, name, address, contact_person, location
             FROM schools
             WHERE name LIKE ?
             ORDER BY name ASC
             """,
-            (f"%{search}%",),
-        ).fetchall()
+            (f"%{search_term}%",),
+        )
     else:
-        schools = db.execute(
+        # No search: show all schools
+        cursor.execute(
             """
             SELECT id, name, address, contact_person, location
             FROM schools
             ORDER BY name ASC
             """
-        ).fetchall()
+        )
 
-    return render_template("schools_list.html", schools=schools, search=search)
+    schools = cursor.fetchall()
+    conn.close()
+
+    return render_template("schools_list.html", schools=schools, search=search_term)
 
 
 @app.route("/schools/<int:school_id>/edit", methods=["GET", "POST"])
 def edit_school(school_id):
     """
-    Implements:
-        2.2 Show current school details
-        2.3 Allow user to change details
-        2.4 Save updated info
-        2.5 Display confirmation / error messages
+    This page allows the user to:
+      - See the current details of a school
+      - Edit any of the details
+      - Save the changes
+
+    It covers:
+      System Requirement 2.2, 2.3, 2.4, 2.5
+      and all acceptance criteria for Feature 2.
     """
-    db = get_db()
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    # Fetch existing school (for both GET and POST)
-    school = db.execute(
-        "SELECT * FROM schools WHERE id = ?",
-        (school_id,),
-    ).fetchone()
+    # Get the existing school from the database
+    cursor.execute("SELECT * FROM schools WHERE id = ?", (school_id,))
+    school = cursor.fetchone()
 
+    # If no school found, show an error and go back to the list
     if school is None:
+        conn.close()
         flash("School not found.", "error")
         return redirect(url_for("list_schools"))
 
     if request.method == "POST":
+        # User submitted the form -> validate and update
         is_valid, errors, cleaned = validate_school_form(request.form)
 
         if not is_valid:
-            # Acceptance Criterion 2: show error message for invalid information
-            flash("Please correct the errors below and try again.", "error")
+            # Something is wrong: show error messages and keep the form filled in
+            flash("Please fix the errors below and try again.", "error")
+            conn.close()
             return render_template(
                 "edit_school.html",
                 school=school,
-                form_data=request.form,
+                form_data=request.form,  # keep what user typed
                 errors=errors,
             )
 
-        # Perform the update in the database
-        db.execute(
+        # If we reach here, data is valid -> update the database
+        cursor.execute(
             """
             UPDATE schools
-            SET name = ?,
+            SET
+                name = ?,
                 address = ?,
                 contact_person = ?,
                 contact_phone = ?,
@@ -192,28 +232,30 @@ def edit_school(school_id):
                 school_id,
             ),
         )
-        db.commit()
+        conn.commit()
+        conn.close()
 
-        # Acceptance Criterion 3 & 4:
-        #   - Data is saved in the database (commit above)
-        #   - Confirmation message after saving (flash below)
+        # Confirmation message (acceptance criteria)
         flash("School information updated successfully.", "success")
 
-        # Redirect to avoid resubmitting form on refresh
+        # Redirect to the same page so refresh doesn't resubmit the form
         return redirect(url_for("edit_school", school_id=school_id))
 
-    # GET request: show form with existing values
+    # If the request is GET: show the form with the current school data
+    conn.close()
     return render_template(
         "edit_school.html",
         school=school,
-        form_data=school,   # prefill form
+        form_data=school,  # pre-fill form with existing data
         errors={},
     )
 
 
-# --- MAIN ENTRYPOINT --------------------------------------------------------
+# -----------------------------------------
+# RUN THE APP
+# -----------------------------------------
 
 if __name__ == "__main__":
-    # For local testing
+    # debug=True helps while developing (shows errors in the browser)
     app.run(debug=True)
     

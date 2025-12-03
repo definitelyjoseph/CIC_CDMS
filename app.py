@@ -97,14 +97,15 @@ def fetch_summary(
 
         query = f"""
             SELECT
-                COUNT(DISTINCT school_id)        AS number_of_schools,
-                COUNT(*)                         AS number_of_visits,
+                COUNT(DISTINCT school_id) AS number_of_schools,
+                COUNT(*)                  AS number_of_visits
             FROM visits
             {where_clause};
         """
 
         cur = conn.execute(query, params)
         row = cur.fetchone()
+        
 
         if row is None:
             return {

@@ -7,88 +7,91 @@
 
 <h2>Edit School: {{ school['name'] }}</h2>
 
+<!-- Flash messages (success or error) -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <p><strong>{{ category|capitalize }}:</strong> {{ message }}</p>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
 <form method="post">
 
-    <div class="form-group">
-        <label for="name">School Name *</label>
-        <input type="text" id="name" name="name" value="{{ form_data['name'] }}" required>
-        {% if errors.get('name') %}
-        <span class="error">{{ errors['name'] }}</span>
-        {% endif %}
-    </div>
+    <br>
 
-    <div class="form-group">
-        <label for="address">Address *</label>
-        <input type="text" id="address" name="address" value="{{ form_data['address'] }}" required>
-        {% if errors.get('address') %}
-        <span class="error">{{ errors['address'] }}</span>
-        {% endif %}
-    </div>
+    <label>School Name (Required)</label><br>
+    <input type="text" name="name" value="{{ form_data.name }}" style="width:300px;">
+    {% if errors.name %}
+        <small style="color:red;">{{ errors.name }}</small>
+    {% endif %}
+    <br><br>
 
-    <div class="form-group">
-        <label for="contact_person">Contact Person *</label>
-        <input type="text" id="contact_person" name="contact_person" value="{{ form_data['contact_person'] }}" required>
-        {% if errors.get('contact_person') %}
-        <span class="error">{{ errors['contact_person'] }}</span>
-        {% endif %}
-    </div>
+    <label>Address (Required)</label><br>
+    <input type="text" name="address" value="{{ form_data.address }}" style="width:300px;">
+    {% if errors.address %}
+        <small style="color:red;">{{ errors.address }}</small>
+    {% endif %}
+    <br><br>
 
-    <div class="form-group">
-        <label for="contact_phone">Contact Phone</label>
-        <input type="text" id="contact_phone" name="contact_phone" value="{{ form_data['contact_phone'] }}">
-        {% if errors.get('contact_phone') %}
-        <span class="error">{{ errors['contact_phone'] }}</span>
-        {% endif %}
-    </div>
+    <label>Contact Person (Required)</label><br>
+    <input type="text" name="contact_person" value="{{ form_data.contact_person }}" style="width:300px;">
+    {% if errors.contact_person %}
+        <small style="color:red;">{{ errors.contact_person }}</small>
+    {% endif %}
+    <br><br>
 
-    <div class="form-group">
-        <label for="contact_email">Contact Email</label>
-        <input type="email" id="contact_email" name="contact_email" value="{{ form_data['contact_email'] }}">
-        {% if errors.get('contact_email') %}
-        <span class="error">{{ errors['contact_email'] }}</span>
-        {% endif %}
-    </div>
+    <label>Contact Phone</label><br>
+    <input type="text" name="contact_phone" value="{{ form_data.contact_phone }}" style="width:300px;">
+    {% if errors.contact_phone %}
+        <small style="color:red;">{{ errors.contact_phone }}</small>
+    {% endif %}
+    <br><br>
 
-    <div class="form-group">
-        <label for="capacity">Capacity (number of students)</label>
-        <input type="number" id="capacity" name="capacity" value="{{ form_data['capacity'] }}">
-        {% if errors.get('capacity') %}
-        <span class="error">{{ errors['capacity'] }}</span>
-        {% endif %}
-    </div>
+    <label>Contact Email</label><br>
+    <input type="email" name="contact_email" value="{{ form_data.contact_email }}" style="width:300px;">
+    {% if errors.contact_email %}
+        <small style="color:red;">{{ errors.contact_email }}</small>
+    {% endif %}
+    <br><br>
 
-    <div class="form-inline">
-        <div class="form-group">
-            <label for="start_time">School Start Time</label>
-            <input type="text" id="start_time" name="start_time" placeholder="e.g. 8:00 AM" value="{{ form_data['start_time'] }}">
-        </div>
+    <label>Capacity</label><br>
+    <input type="number" name="capacity" value="{{ form_data.capacity }}" style="width:300px;">
+    {% if errors.capacity %}
+        <small style="color:red;">{{ errors.capacity }}</small>
+    {% endif %}
+    <br><br>
 
-        <div class="form-group">
-            <label for="end_time">School End Time</label>
-            <input type="text" id="end_time" name="end_time" placeholder="e.g. 2:30 PM" value="{{ form_data['end_time'] }}">
-        </div>
-    </div>
+    <label>School Start Time</label><br>
+    <input type="text" name="start_time" placeholder="e.g. 8:00 AM"
+           value="{{ form_data.start_time }}" style="width:300px;">
+    <br><br>
 
-    <div class="form-group">
-        <label for="exam_dates">Exam Dates</label>
-        <textarea id="exam_dates" name="exam_dates" rows="2">{{ form_data['exam_dates'] }}</textarea>
-    </div>
+    <label>School End Time</label><br>
+    <input type="text" name="end_time" placeholder="e.g. 2:30 PM"
+           value="{{ form_data.end_time }}" style="width:300px;">
+    <br><br>
 
-    <div class="form-group">
-        <label for="holidays">Holidays / Special Notes</label>
-        <textarea id="holidays" name="holidays" rows="2">{{ form_data['holidays'] }}</textarea>
-    </div>
+    <label>Exam Dates</label><br>
+    <textarea name="exam_dates" rows="2" style="width:300px;">{{ form_data.exam_dates }}</textarea>
+    <br><br>
 
-    <div class="form-group">
-        <label for="num_teachers">Number of Teachers</label>
-        <input type="number" id="num_teachers" name="num_teachers" value="{{ form_data['num_teachers'] }}">
-        {% if errors.get('num_teachers') %}
-        <span class="error">{{ errors['num_teachers'] }}</span>
-        {% endif %}
-    </div>
+    <label>Holidays / Special Notes</label><br>
+    <textarea name="holidays" rows="2" style="width:300px;">{{ form_data.holidays }}</textarea>
+    <br><br>
+
+    <label>Number of Teachers</label><br>
+    <input type="number" name="num_teachers" value="{{ form_data.num_teachers }}" style="width:300px;">
+    {% if errors.num_teachers %}
+        <small style="color:red;">{{ errors.num_teachers }}</small>
+    {% endif %}
+    <br><br>
 
     <button type="submit">Save Changes</button>
-    <a href="{{ url_for('list_schools') }}" class="back-link">Back to list</a>
+    <br><br>
+
+    <a href="{{ url_for('list_schools') }}">Back to list</a>
+
 </form>
 
 {% endblock %}

@@ -8,8 +8,6 @@
 
 {% block content %}
 
-<h2>Add School Information</h2>
-
 <!-- Flash messages for success or errors -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -91,7 +89,7 @@
     <textarea name="holidays" rows="2" style="width:300px;">{{ form_data.holidays }}</textarea>
     <br><br>
 
-    <label>Number of Teachers</label>
+    <label>Number of Teachers</label><br>
     <input type="number" name="num_teachers" style="width:500px;">
     {% if errors.num_teachers %}
         <small style="color:red;">{{ errors.num_teachers }}</small>

@@ -340,7 +340,7 @@ def add_school():
 
         #handles the case if the form info is not valid
         if not is_valid:
-            #flash("Please fix errors below and try again.","error")
+            flash("Please fix errors below and try again.","error")
             return render_template(
                 "add_school.html",
                 form_data=request.form,

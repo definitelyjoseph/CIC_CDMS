@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Schedule Visit</h2>
+
+<form method="POST">
+    <label>School:</label><br>
+    <select name="school_id">
+        {% for school in schools %}
+        <option value="{{ school.id }}">{{ school.name }} - {{ school.location }}</option>
+        {% endfor %}
+    </select><br><br>
+
+    <label>Visit Date:</label><br>
+    <input type="date" name="visit_date"><br><br>
+
+    <label>Visit Time:</label><br>
+    <input type="time" name="visit_time"><br><br>
+
+    <button type="submit">Schedule</button>
+</form>
+{% endblock %}

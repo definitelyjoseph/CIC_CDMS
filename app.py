@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 import os
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from sqlalchemy import and_
 
 app = Flask(__name__)
 app.secret_key = "very-simple-secret-key"  # used for flash messages
@@ -8,6 +11,7 @@ app.secret_key = "very-simple-secret-key"  # used for flash messages
 # The SQLite database file
 DATABASE = os.path.join(os.path.dirname(__file__), "cdms.db")
 
+db = SQLAlchemy(app)
 
 # ---------------------------
 # Connect to the database
@@ -16,6 +20,39 @@ def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row  # allows column names
     return conn
+
+# ---------- MODELS ----------
+
+class School(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    capacity = db.Column(db.Integer)
+    location = db.Column(db.String(200), nullable=False)
+    contact_person = db.Column(db.String(100))
+    start_time = db.Column(db.String(20))
+    end_time = db.Column(db.String(20))
+    exam_dates = db.Column(db.String(255))   # simple for now
+    holidays = db.Column(db.String(255))
+    num_teachers = db.Column(db.Integer)
+
+    visits = db.relationship('Visit', backref='school', lazy=True)
+
+class Visit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
+    visit_date = db.Column(db.Date, nullable=False)
+    visit_time = db.Column(db.String(20), nullable=False)
+    status = db.Column(db.String(20), default='Scheduled')  # Scheduled/Completed
+
+    feedbacks = db.relationship('Feedback', backref='visit', lazy=True)
+
+class Feedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    visit_id = db.Column(db.Integer, db.ForeignKey('visit.id'), nullable=False)
+    rating = db.Column(db.Integer)  # 1–5
+    comments = db.Column(db.Text)
+    submitted_by = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 # ---------------------------
@@ -301,6 +338,54 @@ def add_school():
                            form_data={},
                            errors={},
                            )
+
+# ---------------------------
+# Schedule School Visits
+# ---------------------------
+from sqlalchemy import and_
+
+@app.route('/visits', methods=['GET'])
+def list_visits():
+    visits = Visit.query.order_by(Visit.visit_date.desc()).all()
+    return render_template('visits/list.html', visits=visits)
+
+
+@app.route('/visits/schedule', methods=['GET', 'POST'])
+def schedule_visit():
+    schools = School.query.all()
+
+    if request.method == 'POST':
+        school_id = request.form.get('school_id')
+        date_str = request.form.get('visit_date')
+        time_str = request.form.get('visit_time')
+
+        if not school_id or not date_str or not time_str:
+            flash('All fields are required.', 'error')
+            return redirect(url_for('schedule_visit'))
+
+        visit_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+        # Conflict check (SRS: 3.3)
+        conflict = Visit.query.filter(
+            and_(Visit.visit_date == visit_date,
+                 Visit.visit_time == time_str)
+        ).first()
+
+        if conflict:
+            flash('Conflict: there is already a visit at this date and time.', 'error')
+            return redirect(url_for('schedule_visit'))
+
+        new_visit = Visit(
+            school_id=int(school_id),
+            visit_date=visit_date,
+            visit_time=time_str
+        )
+        db.session.add(new_visit)
+        db.session.commit()
+        flash('Visit scheduled successfully!', 'success')
+        return redirect(url_for('list_visits'))
+
+    return render_template('visits/schedule.html', schools=schools)
 
 # ---------------------------
 # Run the app

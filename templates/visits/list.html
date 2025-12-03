@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Scheduled Visits</h2>
+<a href="{{ url_for('schedule_visit') }}">Schedule New Visit</a>
+<table border="1" cellpadding="5">
+    <tr>
+        <th>School</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Status</th>
+    </tr>
+    {% for visit in visits %}
+    <tr>
+        <td>{{ visit.school.name }}</td>
+        <td>{{ visit.visit_date }}</td>
+        <td>{{ visit.visit_time }}</td>
+        <td>{{ visit.status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

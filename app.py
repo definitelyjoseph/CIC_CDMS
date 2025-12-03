@@ -1,9 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 import sqlite3
 import os
+import csv
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import and_
+from pathlib import Path
+from typing import Dict, Any, List, Optional, Tuple
 
 app = Flask(__name__)
 app.secret_key = "very-simple-secret-key"  # used for flash messages
@@ -18,6 +21,11 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Now it's safe to initialize SQLAlchemy
 db = SQLAlchemy(app)
 
+# Directory where generated CSV reports will be stored
+REPORTS_DIR = Path("reports")
+REPORTS_DIR.mkdir(exist_ok=True)
+
+
 
 # ---------------------------
 # Connect to the database
@@ -26,6 +34,112 @@ def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row  # allows column names
     return conn
+
+def build_where_clause(
+    report_type: str,
+    start_date: Optional[date],
+    end_date: Optional[date],
+    school_id: Optional[int],
+    partner_id: Optional[int],
+) -> Tuple[str, List[Any]]:
+    conditions = []
+    params: List[Any] = []
+
+    # Date filters
+    if start_date and end_date:
+        conditions.append("visit_date BETWEEN ? AND ?")
+        params.extend([start_date.isoformat(), end_date.isoformat()])
+    elif start_date:
+        conditions.append("visit_date >= ?")
+        params.append(start_date.isoformat())
+    elif end_date:
+        conditions.append("visit_date <= ?")
+        params.append(end_date.isoformat())
+
+    # School filter
+    if report_type == "by_school" and school_id is not None:
+        conditions.append("school_id = ?")
+        params.append(school_id)
+
+    # Partner filter
+    if report_type == "by_partner" and partner_id is not None:
+        conditions.append("partner_id = ?")
+        params.append(partner_id)
+
+    where_clause = ""
+    if conditions:
+        where_clause = "WHERE " + " AND ".join(conditions)
+
+    return where_clause, params
+
+
+def fetch_summary(
+    report_type: str,
+    start_date: Optional[date],
+    end_date: Optional[date],
+    school_id: Optional[int],
+    partner_id: Optional[int],
+) -> Dict[str, Any]:
+    """
+    Uses raw sqlite3 to summarize the visits table.
+    Assumes visits table has:
+        - school_id
+        - visit_date
+        - students_count
+        - teachers_count
+        - parents_count
+    """
+    conn = get_db_connection()
+    try:
+        where_clause, params = build_where_clause(
+            report_type, start_date, end_date, school_id, partner_id
+        )
+
+        query = f"""
+            SELECT
+                COUNT(DISTINCT school_id)        AS number_of_schools,
+                COUNT(*)                         AS number_of_visits,
+                COALESCE(SUM(students_count), 0) AS total_students,
+                COALESCE(SUM(teachers_count), 0) AS total_teachers,
+                COALESCE(SUM(parents_count), 0)  AS total_parents
+            FROM visits
+            {where_clause};
+        """
+
+        cur = conn.execute(query, params)
+        row = cur.fetchone()
+
+        if row is None:
+            return {
+                "number_of_schools": 0,
+                "number_of_visits": 0,
+                "total_students": 0,
+                "total_teachers": 0,
+                "total_parents": 0,
+            }
+
+        return dict(row)
+    finally:
+        conn.close()
+
+
+def write_csv(summary: Dict[str, Any], report_type: str) -> Path:
+    """
+    Writes the summary dict out to a CSV file in REPORTS_DIR and
+    returns the file path.
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"summary_{report_type}_{timestamp}.csv"
+    output_path = REPORTS_DIR / filename
+
+    with output_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Metric", "Value"])
+        for key, value in summary.items():
+            writer.writerow([key, value])
+
+    return output_path
+
 
 # ---------- MODELS ----------
 
@@ -430,6 +544,83 @@ def schedule_visit():
         return redirect(url_for('list_visits'))
 
     return render_template('visits/schedule.html', schools=schools)
+
+# ---------------------------
+# Requirement 4: Summary Reports
+# ---------------------------
+
+@app.route("/reports", methods=["GET", "POST"])
+def generate_report():
+    """Generate summary reports based on date range, school, or partner."""
+    if request.method == "GET":
+        # Show the form
+        return render_template("report_form.html")
+
+    report_type = request.form.get("report_type", "by_date_range")
+
+    # Helper to parse dates from the form
+    def parse_date(field_name: str) -> Optional[date]:
+        value = request.form.get(field_name, "").strip()
+        if not value:
+            return None
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date()
+        except ValueError:
+            return None
+
+    start_date = parse_date("start_date")
+    end_date = parse_date("end_date")
+
+    # Helper to parse integers from the form
+    def parse_int(field_name: str) -> Optional[int]:
+        value = request.form.get(field_name, "").strip()
+        if not value:
+            return None
+        try:
+            return int(value)
+        except ValueError:
+            return None
+
+    school_id = parse_int("school_id")
+    partner_id = parse_int("partner_id")
+
+    # Build summary based on filters
+    summary = fetch_summary(
+        report_type=report_type,
+        start_date=start_date,
+        end_date=end_date,
+        school_id=school_id,
+        partner_id=partner_id,
+    )
+
+    # Write CSV version of this summary
+    output_path = write_csv(summary, report_type)
+
+    flash("Report generated successfully.", "success")
+
+    return render_template(
+        "report_result.html",
+        summary=summary,
+        report_file_name=output_path.name,
+        report_type=report_type,
+    )
+
+
+@app.route("/reports/download/<filename>")
+def download_report(filename: str):
+    """Download a previously generated CSV report."""
+    file_path = REPORTS_DIR / filename
+    if not file_path.exists():
+        flash("Report file not found.", "error")
+        return redirect(url_for("generate_report"))
+
+    return send_file(
+        file_path,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="text/csv",
+    )
+
 
 # ---------------------------
 # Run the app

@@ -5,62 +5,81 @@
 
 {% block content %}
 
-<!-- Page heading -->
-<h2>All Schools</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">All Schools</h5>
+    <a href="{{ url_for('add_school') }}" class="btn btn-primary btn-sm">
+        Add New School
+    </a>
+</div>
 
-<!-- Search form -->
-<form method="get" action="{{ url_for('list_schools') }}">
-    <label for="search">Search by name:</label>
-    <input type="text" id="search" name="search" value="{{ search or '' }}" placeholder="Enter school name">
-    <button type="submit">Search</button>
+<form method="get" action="{{ url_for('list_schools') }}" class="row g-2 mb-3">
+    <div class="col-auto">
+        <label for="search" class="col-form-label"><strong>Search by name:</strong></label>
+    </div>
+    <div class="col-auto">
+        <input
+            type="text"
+            id="search"
+            name="search"
+            class="form-control form-control-sm"
+            value="{{ search or '' }}"
+            placeholder="Enter school name"
+        >
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">
+            Search
+        </button>
+    </div>
 </form>
 
-<br>
-
-<!-- If there are schools in the database, show them -->
 {% if schools %}
-<table border="1" cellpadding="5">
-    <thead>
-        <tr>
-            <!-- Table headings -->
-            <th>ID</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Contact Person</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Contact Person</th>
+                    <th style="width: 160px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for school in schools %}
+                <tr>
+                    <td>{{ school["id"] }}</td>
+                    <td>{{ school["name"] }}</td>
+                    <td>{{ school["address"] }}</td>
+                    <td>{{ school["contact_person"] }}</td>
+                    <td>
+                        <a
+                            href="{{ url_for('edit_school', school_id=school['id']) }}"
+                            class="btn btn-sm btn-warning"
+                        >
+                            Edit
+                        </a>
 
-        <!-- Loop through all schools -->
-        {% for school in schools %}
-        <tr>
-            <td>{{ school["id"]}}</td>
-            <td>{{ school["name"] }}</td>
-            <td>{{ school["address"] }}</td>
-            <td>{{ school["contact_person"] }}</td>
-
-            <!-- Actions: Edit + Delete -->
-            <td>
-                <!-- Existing Edit link -->
-                <a href="{{ url_for('edit_school', school_id=school['id']) }}">Edit</a>
-
-                <!-- ADDED: Simple inline delete form -->
-                <form method="post"
-                      action="{{ url_for('delete_school', school_id=school['id']) }}"
-                      style="display:inline;"
-                      onsubmit="return confirm('Delete this school?');">
-                    <button type="submit">Delete</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<!-- If no schools exist -->
+                        <form
+                            method="post"
+                            action="{{ url_for('delete_school', school_id=school['id']) }}"
+                            style="display:inline;"
+                            onsubmit="return confirm('Delete this school?');"
+                        >
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% else %}
-<p>No schools found.</p>
+<p class="text-muted mt-3">No schools found.</p>
 {% endif %}
 
 {% endblock %}

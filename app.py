@@ -623,6 +623,19 @@ def schedule_visit():
 
     return render_template('visits/schedule.html', schools=schools)
 
+@app.route('/visits/<int:visit_id>/delete', methods=['POST'])
+@login_required
+def delete_visit(visit_id):
+    # Find the visit by ID or show 404 if not found
+    visit = Visit.query.get_or_404(visit_id)
+
+    db.session.delete(visit)
+    db.session.commit()
+
+    flash('Visit deleted successfully.', 'success')
+    return redirect(url_for('list_visits'))
+
+
 # ---------------------------
 # Requirement 4: Summary Reports
 # ---------------------------

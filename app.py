@@ -3,6 +3,7 @@ from functools import wraps
 import sqlite3
 import os
 import csv
+from FeedbackForm import FeedbackForm
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date
 from sqlalchemy import and_
@@ -715,6 +716,28 @@ def generate_report():
         report_type=report_type,
     )
 
+# ---------------------------
+# Requirement 6: Feedback page
+# ---------------------------
+@app.route("/feedback", methods=['GET', 'POST'])
+def feedback():
+    form = FeedbackForm()
+    if form.validate_on_submit():
+        new_feedback = Feedback(
+            visit_id=form.VisitId.data,        
+            Name=form.Name.data,
+            email=form.Email.data,
+            School_Name=form.School_name.data,
+            Trip_date=form.TripDate.data,
+            feedback=form.Feedback.data
+        )
+        db.session.add(new_feedback)
+        db.session.commit()
+
+        flash(f'Feedback submitted successfully for {form.Name.data}!', 'success')
+        return redirect(url_for('feedback'))
+
+    return render_template('feedback.html', title='Feedback Form', form=form)
 
 @app.route("/reports/download/<filename>")
 @login_required  # ADDED

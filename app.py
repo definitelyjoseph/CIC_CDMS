@@ -729,13 +729,15 @@ def generate_report():
 def feedback():
     form = FeedbackForm()
 
+    schools = School.query.order_by(School.name).all()
+    school_names = [s.name for s in schools]
+
     if form.validate_on_submit():
         new_feedback = Feedback(
-            # not using visit_id for now, so leave it as None
-            visit_id=None,
+            visit_id=None,  # or set a real visit ID later if you link it
             Name=form.Name.data,
-            School_name=form.School_name.data,
             Email=form.Email.data,
+            School_name=form.School_name.data,
             TripDate=form.TripDate.data,
             Feedback=form.Feedback.data
         )
@@ -745,7 +747,13 @@ def feedback():
         flash(f'Feedback submitted successfully for {form.Name.data}!', 'success')
         return redirect(url_for('feedback'))
 
-    return render_template('feedback.html', title='Feedback Form', form=form)
+    return render_template(
+        'feedback.html',
+        title='Feedback Form',
+        form=form,
+        school_names=school_names
+    )
+
 
 
 # ---------------------------

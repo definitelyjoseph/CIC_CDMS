@@ -20,17 +20,39 @@
                 </div>
                 <div class="form-group">
                     {{ form.School_name.label(class="form-control-label") }}
+
                     {% if form.School_name.errors %}
-                        {{ form.School_name(class="form-control form-control-lg is-invalid") }}
+                        <input
+                            list="school-list"
+                            name="{{ form.School_name.name }}"
+                            id="{{ form.School_name.id }}"
+                            class="form-control form-control-lg is-invalid"
+                            value="{{ form.School_name.data or '' }}"
+                             
+                        >
                         <div class="invalid-feedback">
                             {% for error in form.School_name.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.School_name(class="form-control form-control-lg") }}
+                        <input
+                            list="school-list"
+                            name="{{ form.School_name.name }}"
+                            id="{{ form.School_name.id }}"
+                            class="form-control form-control-lg"
+                            value="{{ form.School_name.data or '' }}"
+                            
+                        >
                     {% endif %}
+
+                    <datalist id="school-list">
+                        {% for name in school_names %}
+                            <option value="{{ name }}"></option>
+                        {% endfor %}
+                    </datalist>
                 </div>
+
                 <div class="form-group">
                     {{ form.Email.label(class="form-control-label") }}
                     {% if form.Email.errors %}

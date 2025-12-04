@@ -101,12 +101,18 @@ def fetch_summary(
 ) -> Dict[str, Any]:
     """
     Uses raw sqlite3 to summarize the visits table.
-    Assumes visits table has:
+
+    Current visits table has:
         - school_id
         - visit_date
-        - students_count
-        - teachers_count
-        - parents_count
+        - visit_time
+        - status
+
+    We will calculate:
+        - number_of_schools  (distinct school_id)
+        - number_of_visits   (total rows)
+        - total_students / total_teachers / total_parents
+          (set to 0 for now, since those columns don't exist yet)
     """
     conn = get_db_connection()
     try:
@@ -116,11 +122,8 @@ def fetch_summary(
 
         query = f"""
             SELECT
-                COUNT(DISTINCT school_id)        AS number_of_schools,
-                COUNT(*)                         AS number_of_visits,
-                COALESCE(SUM(students_count), 0) AS total_students,
-                COALESCE(SUM(teachers_count), 0) AS total_teachers,
-                COALESCE(SUM(parents_count), 0)  AS total_parents
+                COUNT(DISTINCT school_id) AS number_of_schools,
+                COUNT(*)                  AS number_of_visits
             FROM visits
             {where_clause};
         """
@@ -137,9 +140,20 @@ def fetch_summary(
                 "total_parents": 0,
             }
 
-        return dict(row)
+        # row is a sqlite3.Row → we can read by key
+        summary = {
+            "number_of_schools": row["number_of_schools"] or 0,
+            "number_of_visits": row["number_of_visits"] or 0,
+            # These are placeholders since we don't track them yet
+            "total_students": 0,
+            "total_teachers": 0,
+            "total_parents": 0,
+        }
+
+        return summary
     finally:
         conn.close()
+
 
 
 def write_csv(summary: Dict[str, Any], report_type: str) -> Path:

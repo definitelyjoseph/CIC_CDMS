@@ -4,26 +4,36 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <!-- Bootstrap CSS (kept) -->
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 
     <title>Captain I Can - {{ title if title else 'Welcome' }}</title>
 
     <style>
         body {
-            background: #f0f8ff; 
-            color: #2c3e50;
-            font-family: "Segoe UI", sans-serif;
+            background: #f4f6fb; /* similar light background as base layout */
+            color: #1f2933;
+            font-family: "Segoe UI", Arial, sans-serif;
         }
 
+        /* Top bar styled to match the dark blue tone from the sidebar */
         .bg-steel {
-            background-color: #0077b6 !important; 
+            background-color: #003366 !important; /* deep navy like your main app */
         }
 
         .navbar-brand {
             font-weight: bold;
-            font-size: 1.4rem;
-            color: #ffe66d !important; 
+            font-size: 1.3rem;
+            color: #ffcc33 !important;  /* warm accent similar to Captain I Can vibe */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-brand img {
+            max-height: 32px;
+            border-radius: 6px;
         }
 
         .site-header {
@@ -33,40 +43,46 @@
         .container-centered {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             flex-direction: column;
-            text-align: center;
-            margin-top: 80px;
+            margin-top: 100px;
         }
 
         .comfort-text {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            color: #004d73;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: #374151;
+        }
+
+        .content-card {
+            background: #ffffff;
+            padding: 24px 28px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+            margin-top: 10px;
         }
 
         .btn-primary {
-            background-color: #0096c7;
+            background-color: #00509e;
             border: none;
-            padding: 10px 25px;
-            border-radius: 25px;
+            padding: 10px 22px;
+            border-radius: 999px;
             font-weight: 600;
         }
 
         .btn-primary:hover {
-            background-color: #0077b6;
+            background-color: #003f7a;
         }
 
         .alert {
-            text-align: center;
+            text-align: left;
+            border-radius: 8px;
         }
 
-        .content-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
-            margin-top: 20px;
+        /* Make the outer container narrower on large screens, centered on page */
+        .feedback-wrapper {
+            max-width: 720px;
+            margin: 0 auto;
         }
     </style>
 </head>
@@ -74,21 +90,29 @@
     <header class="site-header">
         <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
             <div class="container d-flex justify-content-center">
-                <a class="navbar-brand" href="/">Captain I Can</a>
+                <a class="navbar-brand" href="/">
+                    <img src="{{ url_for('static', filename='logo.png') }}"
+                         alt="Captain I Can Logo">
+                    Captain I Can – CDMS Feedback
+                </a>
             </div>
         </nav>
     </header>
 
     <main role="main" class="container container-centered">
-        <div class="col-md-10 col-lg-8">
+        <div class="feedback-wrapper">
             <p class="comfort-text">
-                "Thank you so much for taking the time to provide your feedback.We truly appreciate your input and look forward to making positive changes based on your suggestions."
+                "Thank you so much for taking the time to provide your feedback.
+                We truly appreciate your input and look forward to making positive
+                changes based on your suggestions."
             </p>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                        <div class="alert alert-{{ category }} mt-2 mb-2">
+                            {{ message }}
+                        </div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}

@@ -208,14 +208,20 @@ class Visit(db.Model):
 
 
 class Feedback(db.Model):
-    __tablename__ = "feedback"  # or "feedbacks", just be consistent
+    __tablename__ = "feedback"
 
     id = db.Column(db.Integer, primary_key=True)
-    # FK must point to "visits.id"
-    visit_id = db.Column(db.Integer, db.ForeignKey('visits.id'), nullable=False)
-    rating = db.Column(db.Integer)  # 1–5
-    comments = db.Column(db.Text)
-    submitted_by = db.Column(db.String(100))
+
+    
+    visit_id = db.Column(db.Integer, db.ForeignKey('visits.id'), nullable=True)
+
+    
+    Name = db.Column(db.String(100), nullable=False)
+    School_name = db.Column(db.String(150), nullable=False)
+    Email = db.Column(db.String(120), nullable=False)
+    Feedback = db.Column(db.Text, nullable=False)
+    TripDate = db.Column(db.Date, nullable=False)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -722,14 +728,16 @@ def generate_report():
 @app.route("/feedback", methods=['GET', 'POST'])
 def feedback():
     form = FeedbackForm()
+
     if form.validate_on_submit():
         new_feedback = Feedback(
-            visit_id=form.VisitId.data,        
+            # not using visit_id for now, so leave it as None
+            visit_id=None,
             Name=form.Name.data,
-            email=form.Email.data,
-            School_Name=form.School_name.data,
-            Trip_date=form.TripDate.data,
-            feedback=form.Feedback.data
+            School_name=form.School_name.data,
+            Email=form.Email.data,
+            TripDate=form.TripDate.data,
+            Feedback=form.Feedback.data
         )
         db.session.add(new_feedback)
         db.session.commit()
@@ -738,6 +746,46 @@ def feedback():
         return redirect(url_for('feedback'))
 
     return render_template('feedback.html', title='Feedback Form', form=form)
+
+
+# ---------------------------
+# Feedback admin view
+# ---------------------------
+@app.route("/feedback_db", methods=["GET"])
+@login_required
+def feedback_db():
+    search_query = request.args.get("search", "").strip()
+
+    # Base query
+    query = Feedback.query
+
+    # Apply search filter if present
+    if search_query:
+        query = query.filter(
+            db.or_(
+                Feedback.Name.ilike(f"%{search_query}%"),
+                Feedback.School_name.ilike(f"%{search_query}%")
+            )
+        )
+
+    # Order by newest first
+    feedback_list = query.order_by(Feedback.created_at.desc()).all()
+
+    return render_template(
+        "feedback_db.html",
+        feedback_list=feedback_list,
+        search=search_query
+    )
+
+@app.route("/feedback/<int:feedback_id>/delete", methods=["POST"])
+@login_required
+def delete_feedback(feedback_id):
+    feedback = Feedback.query.get_or_404(feedback_id)
+    db.session.delete(feedback)
+    db.session.commit()
+    flash("Feedback entry deleted successfully.", "success")
+    return redirect(url_for("feedback_db"))
+
 
 @app.route("/reports/download/<filename>")
 @login_required  # ADDED

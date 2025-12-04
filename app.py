@@ -541,6 +541,24 @@ def add_school():
         try:
             conn = get_db_connection()
             cur = conn.cursor()
+            # --------------------------------------
+            # CHECK FOR DUPLICATE SCHOOL BY NAME
+            # --------------------------------------
+            check = cur.execute(
+                "SELECT id FROM schools WHERE LOWER(name) = LOWER(?)",
+                (name,)
+            ).fetchone()
+
+            if check:
+                flash("A school with this name already exists.", "error")
+                conn.close()
+                return render_template(
+                    "add_school.html",
+                    form_data=request.form,
+                    errors={"name": "School name already exists."},
+                )
+            # --------------------------------------
+
             cur.execute("""
                 INSERT INTO schools
                 (name, address, contact_person, contact_phone, contact_email,

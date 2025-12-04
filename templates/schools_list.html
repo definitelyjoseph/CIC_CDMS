@@ -23,6 +23,7 @@
     <thead>
         <tr>
             <!-- Table headings -->
+            <th>ID</th>
             <th>Name</th>
             <th>Address</th>
             <th>Contact Person</th>
@@ -34,6 +35,7 @@
         <!-- Loop through all schools -->
         {% for school in schools %}
         <tr>
+            <td>{{ school["id"]}}</td>
             <td>{{ school["name"] }}</td>
             <td>{{ school["address"] }}</td>
             <td>{{ school["contact_person"] }}</td>

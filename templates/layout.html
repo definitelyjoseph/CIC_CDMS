@@ -1,51 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+    <title>Captain I Can - {{ title if title else 'Welcome' }}</title>
 
-    {% if title %}
-        <title>Captain I Can - {{ title }}</title>
-    {% else %}
-        <title>Captain I can</title>
-    {% endif %}
+    <style>
+        body {
+            background: #f0f8ff; 
+            color: #2c3e50;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .bg-steel {
+            background-color: #0077b6 !important; 
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.4rem;
+            color: #ffe66d !important; 
+        }
+
+        .site-header {
+            margin-bottom: 40px;
+        }
+
+        .container-centered {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .comfort-text {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #004d73;
+        }
+
+        .btn-primary {
+            background-color: #0096c7;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background-color: #0077b6;
+        }
+
+        .alert {
+            text-align: center;
+        }
+
+        .content-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <header class="site-header">
-      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
-        <div class="container">
-          <a class="navbar-brand mr-4" href="/">Captain I can</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarToggle">
-            <div class="navbar-nav mr-auto">
+        <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+            <div class="container d-flex justify-content-center">
+                <a class="navbar-brand" href="/">Captain I Can</a>
             </div>
-          </div>
-        </div>
-      </nav>
+        </nav>
     </header>
-    <main role="main" class="container">
-      <div class="row">
-        <div class="col-md-8">
-          {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-              {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                  {{ message }}
-                </div>
-              {% endfor %}
-            {% endif %}
-          {% endwith %}
-          {% block content %}{% endblock %}
+
+    <main role="main" class="container container-centered">
+        <div class="col-md-10 col-lg-8">
+            <p class="comfort-text">
+                "Thank you so much for taking the time to provide your feedback.We truly appreciate your input and look forward to making positive changes based on your suggestions."
+            </p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="content-card">
+                {% block content %}{% endblock %}
+            </div>
         </div>
-      </div>
     </main>
 </body>
 </html>

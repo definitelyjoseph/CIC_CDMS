@@ -1,65 +1,77 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>CDMS Login</title>
 
-    <!-- Basic styling -->
     <style>
         body {
             font-family: Arial;
             background: #f2f2f2;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin:0;
         }
 
         .box {
-            width:350px;
-            padding:30px;
-            background:white;
-            border-radius:10px;
-            box-shadow:0 0 10px #aaa;
+            width: 350px;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #aaa;
+            text-align: center;       /* 🔥 Centers all inner content */
         }
 
         .box input {
-            width:100%;
-            padding:10px;
-            margin:10px 0;
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
         }
 
         .error {
-            background:#ffdddd;
-            color:#900;
-            padding:10px;
-            text-align:center;
+            background: #ffdddd;
+            color: #900;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
         }
 
         .btn {
-            background:#007bff;
-            color:white;
-            border:none;
-            width:100%;
-            padding:12px;
-            cursor:pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .logo {
+            max-width: 120px;
+            display: block;
+            margin: 0 auto 15px auto;   /* 🔥 Centers the logo */
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>CDMS Login</h2>
 
-    <!-- Displays authentication failure -->
+    <!-- Logo centered with class="logo" -->
+    <img 
+        src="{{ url_for('static', filename='logo.png') }}"
+        alt="Captain I Can Logo"
+        class="logo"
+    >
+
+    <h2>Captain I Can! CDMS</h2>
+
     {% if error %}
     <div class="error">{{ error }}</div>
     {% endif %}
 
-    <!--
-    POST == secure submission
-    Form sends credentials to /login for validation
-    -->
     <form method="POST">
         <input type="text" name="username" placeholder="Username" required>
 
@@ -67,6 +79,7 @@
 
         <button class="btn">Login</button>
     </form>
+
 </div>
 
 </body>

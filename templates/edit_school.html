@@ -8,14 +8,6 @@
 <!-- Shows which school you are editing -->
 <h2>Edit School: {{ school['name'] }}</h2>
 
-<!-- Show any messages from Flask (success or error) -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <p><strong>{{ category|capitalize }}:</strong> {{ message }}</p>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
 
 <!-- Form to edit the school's information -->
 <form method="post">

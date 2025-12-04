@@ -45,13 +45,13 @@
         <h1>
           {% block page_title %}Captain I Can!{% endblock %}
         </h1>
-
-        {# 
-          REMOVED: Global flash messages here so we don't 
-          get the error line under the big page title.
-          Each template (like edit_school.html) now controls 
-          where its own messages appear.
-        #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <p><strong>{{ category|capitalize }}:</strong> {{ message }}</p>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
         <!-- This is where each page will put its own content -->
         {% block content %}{% endblock %}
